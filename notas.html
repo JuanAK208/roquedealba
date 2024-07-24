@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingreso de Notas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        .final {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ingreso de Notas</h2>
+        <div class="form-group">
+            <label for="course">Curso</label>
+            <select id="course">
+                <option value="10-01">10-01</option>
+                <option value="10-02">10-02</option>
+                <option value="10-03">10-03</option>
+                <option value="10-04">10-04</option>
+                <option value="10-05">10-05</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="subject">Asignatura</label>
+            <select id="subject">
+                <option value="fisica">Física</option>
+                <!-- Agregar más asignaturas según sea necesario -->
+            </select>
+        </div>
+        <div class="form-group">
+            <button onclick="listStudents()">Listar Estudiantes</button>
+        </div>
+
+        <div class="table-container">
+            <table id="studentsTable" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>SER</th>
+                        <th>HACER</th>
+                        <th>PRUEBA SABER</th>
+                        <th>NOTA FINAL</th>
+                        <th>Fls.</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsBody">
+                    <!-- Los estudiantes se listarán aquí -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const students10_02 = [
+            'BARON VERGEL JUAN PABLO',
+            'FRANCO MAESTRE YELEINIS YOHANA',
+            'CONTRERAS YARISBETH',
+            'CASTRO ARAUJO LUIS JAVIER',
+            'FUENTES SUAREZ ESNEIDER',
+            'LEON GARCIA SANTIAGO'
+        ];
+
+        function listStudents() {
+            const course = document.getElementById('course').value;
+            const tbody = document.getElementById('studentsBody');
+            tbody.innerHTML = '';
+
+            let students = [];
+
+            if (course === '10-02') {
+                students = students10_02;
+            }
+
+            students.forEach(student => {
+                const row = document.createElement('tr');
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = student;
+                row.appendChild(nameCell);
+
+                ['ser', 'hacer', 'pruebaSaber'].forEach((field, index) => {
+                    const cell = document.createElement('td');
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = 0;
+                    input.max = 100;
+                    input.oninput = calculateFinal;
+                    input.onkeydown = (e) => navigateInput(e, index);
+                    cell.appendChild(input);
+                    row.appendChild(cell);
+                });
+
+                const finalCell = document.createElement('td');
+                finalCell.className = 'final';
+                row.appendChild(finalCell);
+
+                const failsCell = document.createElement('td');
+                const failsInput = document.createElement('input');
+                failsInput.type = 'number';
+                failsInput.min = 0;
+                failsCell.appendChild(failsInput);
+                row.appendChild(failsCell);
+
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('studentsTable').style.display = 'table';
+        }
+
+        function calculateFinal() {
+            const rows = document.querySelectorAll('#studentsBody tr');
+            rows.forEach(row => {
+                const ser = parseFloat(row.children[1].querySelector('input').value) || 0;
+                const hacer = parseFloat(row.children[2].querySelector('input').value) || 0;
+                const pruebaSaber = parseFloat(row.children[3].querySelector('input').value) || 0;
+
+                const finalGrade = (ser * 0.2) + (hacer * 0.6) + (pruebaSaber * 0.2);
+                row.children[4].textContent = Math.round(finalGrade);
+            });
+        }
+
+        function navigateInput(e, index) {
+            const inputs = Array.from(document.querySelectorAll('#studentsBody input'));
+            const currentIndex = inputs.indexOf(e.target);
+            let nextIndex;
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    nextIndex = currentIndex - 4;
+                    break;
+                case 'ArrowDown':
+                    nextIndex = currentIndex + 4;
+                    break;
+                case 'ArrowLeft':
+                    nextIndex = currentIndex - 1;
+                    break;
+                case 'ArrowRight':
+                    nextIndex = currentIndex + 1;
+                    break;
+                default:
+                    return;
+            }
+
+            if (nextIndex >= 0 && nextIndex < inputs.length) {
+                inputs[nextIndex].focus();
+                e.preventDefault();
+            }
+        }
+    </script>
+</body>
+</html>
