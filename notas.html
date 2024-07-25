@@ -71,6 +71,23 @@
         .final {
             font-weight: bold;
         }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            table, th, td {
+                font-size: 14px;
+                padding: 5px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            table {
+                font-size: 12px;
+            }
+            .form-group button {
+                padding: 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -106,6 +123,7 @@
                         <th>HACER</th>
                         <th>PRUEBA SABER</th>
                         <th>NOTA FINAL</th>
+                        <th>LOGRO</th>
                         <th>Fls.</th>
                     </tr>
                 </thead>
@@ -160,6 +178,9 @@
                 finalCell.className = 'final';
                 row.appendChild(finalCell);
 
+                const achievementCell = document.createElement('td');
+                row.appendChild(achievementCell);
+
                 const failsCell = document.createElement('td');
                 const failsInput = document.createElement('input');
                 failsInput.type = 'number';
@@ -182,7 +203,17 @@
 
                 const finalGrade = (ser * 0.2) + (hacer * 0.6) + (pruebaSaber * 0.2);
                 row.children[4].textContent = Math.round(finalGrade);
+
+                const achievement = row.children[5];
+                achievement.textContent = getAchievement(finalGrade);
             });
+        }
+
+        function getAchievement(finalGrade) {
+            if (finalGrade < 60) return '1';
+            if (finalGrade >= 60 && finalGrade < 80) return '2';
+            if (finalGrade >= 80 && finalGrade < 90) return '3';
+            if (finalGrade >= 90) return '4';
         }
 
         function navigateInput(e, index) {
