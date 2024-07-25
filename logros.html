@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Definición de Logros</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .nav {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .nav a:hover {
+            background-color: #0056b3;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            box-sizing: border-box;
+            flex: 1;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .achievement {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .achievement label {
+            display: block;
+            margin-bottom: 5px;
+            flex: 1;
+        }
+        .achievement input {
+            flex: 2;
+            padding: 8px;
+            box-sizing: border-box;
+            margin-right: 10px;
+        }
+        .achievement span {
+            width: 50px;
+            text-align: center;
+            font-weight: bold;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            padding: 8px;
+        }
+        .back-button {
+            display: block;
+            width: 150px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            margin: 20px auto;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .achievement {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .achievement input {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .achievement input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="notas.html">Ingreso de Notas</a>
+        <a href="logros.html">Definición de Logros</a>
+    </div>
+    <div class="container">
+        <h2>Definición de Logros</h2>
+        <div class="achievement">
+            <label for="insufficient">Insuficiente</label>
+            <input type="text" id="insufficient">
+            <span>1</span>
+        </div>
+        <div class="achievement">
+            <label for="basic">Básico</label>
+            <input type="text" id="basic">
+            <span>2</span>
+        </div>
+        <div class="achievement">
+            <label for="high">Alto</label>
+            <input type="text" id="high">
+            <span>3</span>
+        </div>
+        <div class="achievement">
+            <label for="superior">Superior</label>
+            <input type="text" id="superior">
+            <span>4</span>
+        </div>
+        <a href="notas.html" class="back-button">Volver a Notas</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const achievements = ['insufficient', 'basic', 'high', 'superior'];
+            achievements.forEach(key => {
+                const input = document.getElementById(key);
+                input.value = localStorage.getItem(key) || '';
+                input.addEventListener('input', () => {
+                    localStorage.setItem(key, input.value);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
