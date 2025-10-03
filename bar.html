@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Barbería - Reservas</title>
+<style>
+body { font-family: 'Arial', sans-serif; background: linear-gradient(to right, #ffecd2, #fcb69f); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding-top: 50px; }
+.container { background: white; border-radius: 15px; padding: 30px; width: 400px; box-shadow: 0px 8px 20px rgba(0,0,0,0.2);}
+h2 { text-align: center; margin-bottom: 20px; color:#333; }
+input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border:1px solid #ddd; font-size: 14px; }
+button { background: #ff6f61; color:white; font-weight:bold; cursor:pointer; border:none; }
+button:hover { background: #ff4b3a; }
+.admin-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+th { background-color: #ff6f61; color:white; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Reservas Barbería</h2>
+
+  <div id="auth-section">
+    <input type="email" id="email" placeholder="Correo" required>
+    <input type="password" id="password" placeholder="Contraseña" required>
+    <button id="btn-login">Iniciar Sesión / Registrarse</button>
+    <p id="auth-msg"></p>
+  </div>
+
+  <div id="reserva-section" style="display:none;">
+    <input type="text" id="nombre" placeholder="Tu nombre" required>
+    <input type="date" id="fecha" required>
+    <input type="time" id="hora" required>
+    <button id="btn-reservar">Reservar</button>
+    <p id="reserva-msg"></p>
+  </div>
+
+  <div class="admin-section" id="admin-section" style="display:none;">
+    <h3>Vista Administrador</h3>
+    <table id="tabla-reservas">
+      <thead><tr><th>Cliente</th><th>Fecha</th><th>Hora</th><th>Acción</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
+const SUPABASE_URL = "https://vduxrdcpfkiqgvsmocjc.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkdXhyZGNwZmtpcWd2c21vY2pjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0NDkwMDQsImV4cCI6MjA3NTAyNTAwNH0.05DhbcWOWlY7wYB5_Xj9M17rXw8s-EX4YeE0jWCoub4";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const authSection = document.getElementById('auth-section');
+const reservaSection = document.getElementById('reserva-section');
+const adminSection = document.getElementById('admin-section');
+const authMsg = document.getElementById('auth-msg');
+const reservaMsg = document.getElementById('reserva-msg');
+const tablaBody = document.querySelector('#tabla-reservas tbody');
+
+document.getElementById('btn-login').addEventListener('click', async () => {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  let { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+
+  if(loginError) {
+    // REGISTRO
+    let { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+    if(signUpError) { authMsg.textContent = "❌ "+signUpError.message; return; }
+    authMsg.textContent = "✅ Registrado! Revisa tu correo para confirmar.";
+    return;
+  }
+
+  authMsg.textContent = "✅ Sesión iniciada!";
+  authSection.style.display = 'none';
+  reservaSection.style.display = 'block';
+
+  const { data: user } = await supabase.auth.getUser();
+  const userId = user.user.id;
+
+  // Llamada a backend seguro para crear usuario en tabla 'usuarios'
+  await fetch('/api/registrarUsuario', {
+    method:'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ id: userId })
+  });
+
+  const { data: usuarioData } = await supabase.from('usuarios').select('is_admin').eq('id', userId).single();
+  if(usuarioData?.is_admin) { adminSection.style.display = 'block'; cargarReservasAdmin(); }
+});
+
+document.getElementById('btn-reservar').addEventListener('click', async () => {
+  const nombre = document.getElementById('nombre').value;
+  const fecha = document.getElementById('fecha').value;
+  const hora = document.getElementById('hora').value;
+  const { data: user } = await supabase.auth.getUser();
+  const userId = user.user.id;
+
+  const { data: ocupadas } = await supabase
+    .from('reservas')
+    .select('*')
+    .eq('fecha', fecha)
+    .or(`hora.eq.${hora},hora.eq.${siguienteHora(hora)}`);
+
+  if(ocupadas.length>0) { reservaMsg.textContent="❌ Franja horaria ocupada!"; reservaMsg.style.color='red'; return; }
+
+  const { data, error } = await supabase.from('reservas').insert([{ cliente: nombre, fecha, hora, user_id: userId }]).select();
+
+  if(error) { reservaMsg.textContent="❌ "+error.message; reservaMsg.style.color='red'; return; }
+  reservaMsg.textContent="✅ Reserva realizada!"; reservaMsg.style.color='green';
+});
+
+function siguienteHora(hora) {
+  const [h,m] = hora.split(':').map(Number);
+  let d = new Date(); d.setHours(h+1, m);
+  return d.toTimeString().slice(0,5);
+}
+
+async function cargarReservasAdmin() {
+  const { data: reservas } = await supabase.from('reservas').select('*').order('fecha');
+  tablaBody.innerHTML = '';
+  reservas.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.cliente}</td><td>${r.fecha}</td><td>${r.hora}</td><td><button onclick="eliminarReserva('${r.id}')">Eliminar</button></td>`;
+    tablaBody.appendChild(tr);
+  });
+}
+
+window.eliminarReserva = async (id) => {
+  const { error } = await supabase.from('reservas').delete().eq('id', id);
+  if(!error) cargarReservasAdmin();
+}
+</script>
+</body>
+</html>
